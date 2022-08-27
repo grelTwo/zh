@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>socket</title>
+</head>
+<body>
+<div>
+    <div style="display: flex;">
+        <input type="text" id="version" value="v1.0.0">
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <div onclick="changeVersion();">修改版本号</div>
+    </div>
+    <div style="width: 100%;height: 300px;background: gainsboro;display: flex;flex-direction: column;">
+        <div style="display: flex;flex-direction: row;margin: 20px;">
+            <input type="text" id="test1" placeholder="text1" style="width: 70%;height: 30px;">
+            <div style="cursor:pointer;height: 34px;text-align: center;line-height: 30px;width: 30%;"
+                 onclick="test1();">test1
+            </div>
+        </div>
+        <div style="display: flex;flex-direction: row;margin: 20px;">
+            <input type="text" id="test2" placeholder="text1" style="width: 70%;height: 30px;">
+            <div style="cursor:pointer;height: 34px;text-align: center;line-height: 30px;width: 30%;"
+                 onclick="test2();">test2
+            </div>
+        </div>
+        <div style="display: flex;flex-direction: row;margin: 20px;">
+            <input type="text" id="test3" placeholder="text1" style="width: 70%;height: 30px;">
+            <div style="cursor:pointer;height: 34px;text-align: center;line-height: 30px;width: 30%;"
+                 onclick="test3();">test3
+            </div>
+        </div>
+    </div>
+    <div style="text-align: center;height: 200px;width: 100px;">
+        <h1 id="content">在线人数:<span>0</span></h1>
+    </div>
+</div>
+</body>
+<script>
+
+    let websocketInstance;
+    let Reconnect
+    let ReconnectTimer
+    let HeartBeatTimer
+    let ReconnectBox
+    let socket
+
+    window.onload = function () {
+        this.connect();
+    }
+
+    function connect() {
+        this.socket = new WebSocket('ws://127.0.0.1:9501')//
+        // 连接建立成功后触发onopen回调
+        this.socket.onopen = function () {
+            // 断线重连处理
+            if (this.ReconnectBox) {
+                this.ReconnectBox = null;
+                clearInterval(this.ReconnectTimer);
+            }
+            // 前端循环心跳 (1min)
+            this.HeartBeatTimer = setInterval(function () {
+                this.socket.send('PING');
+                //发送版本号
+                let params = {
+                    version: document.getElementById('version').value
+                }
+                release('Index', 'version', params);
+            }, 1000 * 3);
+            release('Index', 'getOnline', {});
+        }
+
+        // 从服务端收到信息触发onmessage回调
+        this.socket.onmessage = function (ev) {
+            try {
+                var data = JSON.parse(ev.data);
+                switch (data.action){
+                    case 'GET_ON_LINE':
+                        let info = data.onLineInfo;
+                        let total = 0;
+                        info.forEach((value,item)=>{
+                            total += parseInt(value.count);
+                        })
+                        document.getElementById('content').querySelector('span').innerText = total;
+                }
+                
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        // 连接失败触发onerror回调
+        this.socket.onerror = function () {
+            this.doReconnect();
+        }
+        // 调用关闭连接，状态立刻变成2(正在关闭)。关闭成功触发onclose变成3
+        // socket.close()
+
+        // 连接关闭触发onclose回调，有回调参数
+        this.socket.onclose = function (event) {
+            const {code, reason, wasClean} = event
+            console.log(code, reason, wasClean) // wasClean表示连接是否已经关闭。boolean
+            this.doReconnect();
+        }
+
+    }
+
+    function release(controller, action, params) {
+        controller = controller || 'index';
+        action = action || 'action';
+        params = params || {};
+        var message = {controller: controller, action: action, params: params}
+        this.socket.send(JSON.stringify(message))
+    }
+
+    function doReconnect() {
+        clearInterval(this.HeartBeatTimer);
+        this.ReconnectTimer = setInterval(function () {
+            this.connect();
+        }, 1000)
+    }
+
+    function test1() {
+        release('Index', 'test1', 'test1');
+    }
+
+    function test2() {
+        release('Index', 'test2', 'test2');
+    }
+
+    function test3() {
+        release('Index', 'test3', 'test3');
+    }
+    
+    function changeVersion()
+    {
+        let params = {
+            version: document.getElementById('version').value
+        }
+        release('Index', 'version', params);
+    }
+
+    function serverDemo(data) {
+        console.log(data);
+    }
+
+</script>
+</html>

@@ -1,0 +1,16 @@
+log/*
+log/!index.html
+.DS_Store
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.lock
+composer.lock
+Temp/*
+Doc/document.html
+.php_cs.cache
+.php-cs-fixer.cache
+vendor
