@@ -15,7 +15,8 @@
     "jaeger/querylist": "^4.2",
     "mongodb/mongodb": "*",
     "ext-mongodb": "*",
-    "easyswoole/spider": "^2.0"
+    "easyswoole/spider": "^2.0",
+    "qiniu/php-sdk": "^7.6"
   },
   "autoload": {
     "psr-4": {

@@ -8,6 +8,7 @@ log/!index.html
 *.njsproj
 *.sln
 *.lock
+composer.lock
 Temp/*
 Doc/document.html
 .php_cs.cache
